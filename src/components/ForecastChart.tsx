@@ -43,9 +43,33 @@ export default function ForecastChart() {
                     <LineChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
+                        <YAxis 
+                            tickFormatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`}
+                        />
+                        <Tooltip 
+                            formatter={(value: number, name: string) => {
+                                const labels = {
+                                    receitas: 'Receitas',
+                                    lucros: 'Lucros',
+                                    dividendos: 'Dividendos'
+                                };
+                                return [`R$ ${value.toLocaleString('pt-BR')}`, labels[name as keyof typeof labels]];
+                            }}
+                        />
+                        <Legend 
+                            formatter={(value) => {
+                                const descriptions = {
+                                    Receitas: 'Total de receitas projetadas para o período',
+                                    Lucros: 'Lucro líquido projetado após impostos e despesas',
+                                    Dividendos: 'Projeção de dividendos a serem distribuídos'
+                                };
+                                return (
+                                    <span title={descriptions[value as keyof typeof descriptions]}>
+                                        {value}
+                                    </span>
+                                );
+                            }}
+                        />
                         <Line
                             type="monotone"
                             dataKey="receitas"
@@ -72,12 +96,17 @@ export default function ForecastChart() {
 }
 
 function generateLabels(type: 'monthly' | 'yearly'): string[] {
-    const currentYear = new Date().getFullYear();
-
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    
     if (type === 'monthly') {
-        return Array.from({ length: 12 }, (_, i) =>
-            `${currentYear}/${String(i + 1).padStart(2, '0')}`
-        );
+        const currentMonth = currentDate.getMonth(); // 0-11
+        return Array.from({ length: 24 }, (_, i) => {
+            const monthIndex = (currentMonth + i) % 12;
+            const yearOffset = Math.floor((currentMonth + i) / 12);
+            const year = currentYear + yearOffset;
+            return `${year}/${String(monthIndex + 1).padStart(2, '0')}`;
+        });
     }
 
     return Array.from({ length: 5 }, (_, i) =>

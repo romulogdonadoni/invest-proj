@@ -44,7 +44,7 @@ function calculateYearlyProjections(indicators: Indicators): ProjectionData {
 }
 
 function calculateMonthlyProjections(indicators: Indicators): ProjectionData {
-    const months = 12;
+    const months = 24;
     const revenues: number[] = [];
     const profits: number[] = [];
     const dividends: number[] = [];
@@ -71,10 +71,10 @@ function calculateMonthlyProjections(indicators: Indicators): ProjectionData {
 
 export function generateLabels(type: 'monthly' | 'yearly') {
     const labels: string[] = [];
-    const periods = type === 'monthly' ? 12 : 5;
+    const periods = type === 'monthly' ? 24 : 5;
     
     if (type === 'monthly') {
-        // Gera labels para os próximos 12 meses
+        // Gera labels para os próximos 24 meses
         const months = [
             'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
             'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
@@ -82,9 +82,11 @@ export function generateLabels(type: 'monthly' | 'yearly') {
         
         const currentMonth = new Date().getMonth();
         
-        for (let i = 0; i <= periods; i++) {
+        for (let i = 0; i < periods; i++) {
             const monthIndex = (currentMonth + i) % 12;
-            labels.push(months[monthIndex]);
+            const yearOffset = Math.floor((currentMonth + i) / 12);
+            const year = new Date().getFullYear() + yearOffset;
+            labels.push(`${months[monthIndex]}/${year}`);
         }
     } else {
         // Gera labels para os próximos 5 anos

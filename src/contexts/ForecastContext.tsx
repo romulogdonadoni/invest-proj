@@ -3,18 +3,20 @@ import { Indicators } from '../types/indicators';
 
 // Valores iniciais
 const initialIndicators: Indicators = {
-    currentPrice: 0,
-    pe: 0,
-    eps: 0,
-    revenueCAGR: 0,
-    profitCAGR: 0,
-    dividendYield: 0,
-    roe: 0,
-    ebitdaMargin: 0,
-    dividendPerShare: 0,
-    avgDividendYield5y: 0,
-    bvps: 0,
-    vpa: 0
+    currentPrice: 11.71,
+    pe: 7.27,
+    eps: 1.61,
+    revenueCAGR: 17.01,
+    profitCAGR: 10.73,
+    dividendYield: 9.82,
+    roe: 23.97,
+    ebitdaMargin: 69.89,
+    dividendPerShare: 1.15,
+    avgDividendYield5y: 9.87,
+    bvps: 6.73,
+    vpa: 6.73,
+    priceVariation: 10.23,
+    pbv: 0.42
 };
 
 interface ForecastContextData {

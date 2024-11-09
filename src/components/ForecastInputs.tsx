@@ -108,6 +108,26 @@ export function ForecastInputs() {
                     onChange={(e) => updateIndicators({ ...indicators, bvps: Number(e.target.value) })}
                 />
             </div>
+            <div className="space-y-2">
+                <Label htmlFor="vpa">VPA</Label>
+                <Input
+                    id="vpa"
+                    type="number"
+                    placeholder="Ex: 18.75"
+                    value={indicators.vpa}
+                    onChange={(e) => updateIndicators({ ...indicators, vpa: Number(e.target.value) })}
+                />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="priceVariation">Variação Preço (%)</Label>
+                <Input
+                    id="priceVariation"
+                    type="number"
+                    placeholder="Ex: 10.23"
+                    value={indicators.priceVariation}
+                    onChange={(e) => updateIndicators({ ...indicators, priceVariation: Number(e.target.value) })}
+                />
+            </div>
         </Card>
     );
 } 

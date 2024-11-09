@@ -11,4 +11,19 @@ export interface Indicators {
     avgDividendYield5y: number;
     bvps: number;
     vpa: number;
+    priceVariation: number;
+    pbv: number;
+} 
+
+export interface StockIndicators {
+    price: number;
+    priceVariation12m: number;
+    pe: number;
+    pbv: number;
+    dividendYield: number;
+    revenueGrowth: number;
+    profitGrowth: number;
+    profitMargin: number;
+    roe: number;
+    debtToEquity: number;
 } 
