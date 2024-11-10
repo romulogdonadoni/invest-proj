@@ -21,8 +21,6 @@ export interface StockIndicators {
     pe: number;
     pbv: number;
     dividendYield: number;
-    revenueGrowth: number;
-    profitGrowth: number;
     profitMargin: number;
     roe: number;
     debtToEquity: number;

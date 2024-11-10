@@ -1,4 +1,5 @@
 import { StockIndicators } from "../types/indicators";
+import { CompanySector, sectorMetrics } from "../types/sectors";
 
 interface ScoreWeights {
     [key: string]: number;
@@ -15,85 +16,119 @@ const weights: ScoreWeights = {
     debtToEquity: 10
 };
 
-export function calculateInvestmentScore(indicators: StockIndicators) {
+export function calculateInvestmentScore(indicators: StockIndicators, sector: CompanySector) {
+    const sectorWeights = adjustWeightsBySector(weights, sector);
+
     const scores = {
-        pe: calculatePEScore(indicators.pe),
-        pbv: calculatePBVScore(indicators.pbv),
-        dividendYield: calculateDYScore(indicators.dividendYield),
-        revenueGrowth: calculateGrowthScore(indicators.revenueGrowth),
-        profitGrowth: calculateGrowthScore(indicators.profitGrowth),
-        profitMargin: calculateMarginScore(indicators.profitMargin),
-        roe: calculateROEScore(indicators.roe),
-        debtToEquity: calculateDebtScore(indicators.debtToEquity)
+        pe: calculatePEScore(indicators.pe, sector),
+        pbv: calculatePBVScore(indicators.pbv, sector),
+        dividendYield: calculateDYScore(indicators.dividendYield, sector),
+        profitMargin: calculateMarginScore(indicators.profitMargin, sector),
+        roe: calculateROEScore(indicators.roe, sector),
+        debtToEquity: calculateDebtScore(indicators.debtToEquity, sector)
     };
 
     const finalScore = Object.entries(scores).reduce((total, [metric, score]) => {
-        return total + (score * weights[metric]) / 100;
+        return total + (score * sectorWeights[metric]) / 100;
     }, 0);
 
     return { scores, finalScore };
 }
 
-// Ajustes nas faixas de cálculo
-function calculatePEScore(pe: number): number {
+function adjustWeightsBySector(baseWeights: ScoreWeights, sector: CompanySector): ScoreWeights {
+    const sectorWeights = { ...baseWeights };
+
+    switch (sector) {
+        case CompanySector.FINANCIAL:
+            sectorWeights.debtToEquity = 5;
+            sectorWeights.roe = 20;
+            break;
+        case CompanySector.TECHNOLOGY:
+            sectorWeights.pe = 10;
+            sectorWeights.profitGrowth = 20;
+            break;
+        case CompanySector.UTILITIES:
+            sectorWeights.dividendYield = 20;
+            sectorWeights.profitMargin = 15;
+            break;
+        // Adicione outros setores conforme necessário
+    }
+
+    // Normaliza os pesos para somarem 100
+    const totalWeight = Object.values(sectorWeights).reduce((sum, weight) => sum + weight, 0);
+    Object.keys(sectorWeights).forEach(key => {
+        sectorWeights[key] = (sectorWeights[key] / totalWeight) * 100;
+    });
+
+    return sectorWeights;
+}
+
+function calculatePEScore(pe: number, sector: CompanySector): number {
+    const maxPE = sectorMetrics[sector].maxPE;
+    const sectorMultiplier = getSectorPEMultiplier(sector);
+
     if (pe <= 0) return 0;
-    if (pe <= 10) return 100;
-    if (pe <= 20) return 80;
-    if (pe <= 30) return 60;
+    if (pe <= maxPE * 0.5 * sectorMultiplier) return 100;
+    if (pe <= maxPE * 0.75 * sectorMultiplier) return 80;
+    if (pe <= maxPE * sectorMultiplier) return 60;
+    if (pe <= maxPE * 1.25 * sectorMultiplier) return 40;
     return 0;
 }
 
-function calculatePBVScore(pbv: number): number {
+function getSectorPEMultiplier(sector: CompanySector): number {
+    switch (sector) {
+        case CompanySector.TECHNOLOGY: return 1.2; // Tecnologia tende a ter P/L mais alto
+        case CompanySector.UTILITIES: return 0.8; // Utilities tendem a ter P/L mais baixo
+        case CompanySector.FINANCIAL: return 0.9;
+        default: return 1;
+    }
+}
+
+function calculatePBVScore(pbv: number, sector: CompanySector): number {
+    const maxPBV = sectorMetrics[sector].maxPBV;
     if (pbv <= 0) return 0;
-    if (pbv <= 1) return 100;
-    if (pbv <= 2) return 80;
-    if (pbv <= 3) return 60;
-    if (pbv <= 4) return 40;
+    if (pbv <= maxPBV * 0.5) return 100;
+    if (pbv <= maxPBV * 0.75) return 80;
+    if (pbv <= maxPBV) return 60;
     return 0;
 }
 
-function calculateDYScore(dy: number): number {
+function calculateDYScore(dy: number, sector: CompanySector): number {
+    const minDY = sectorMetrics[sector].minDividendYield;
     if (dy <= 0) return 0;
-    if (dy >= 6) return 100;
-    if (dy >= 4) return 80;
-    if (dy >= 2) return 60;
+    if (dy >= minDY * 2) return 100;
+    if (dy >= minDY * 1.5) return 80;
+    if (dy >= minDY * 1.25) return 60;
     return 0;
 }
 
-function calculateGrowthScore(growth: number): number {
-    if (growth <= 0) return 0;
-    if (growth >= 25) return 100;
-    if (growth >= 20) return 80;
-    if (growth >= 15) return 60;
-    if (growth >= 10) return 40;
-    if (growth >= 5) return 20;
-    return 0;
-}
-
-function calculateMarginScore(margin: number): number {
+function calculateMarginScore(margin: number, sector: CompanySector): number {
+    const minMargin = sectorMetrics[sector].minProfitMargin;
     if (margin <= 0) return 0;
-    if (margin >= 30) return 100;
-    if (margin >= 25) return 80;
-    if (margin >= 20) return 60;
-    if (margin >= 15) return 40;
-    if (margin >= 10) return 20;
+    if (margin >= minMargin * 2) return 100;
+    if (margin >= minMargin * 1.5) return 80;
+    if (margin >= minMargin * 1.25) return 60;
+    if (margin >= minMargin * 1.1) return 40;
+    if (margin >= minMargin * 1.05) return 20;
     return 0;
 }
 
-function calculateROEScore(roe: number): number {
+function calculateROEScore(roe: number, sector: CompanySector): number {
+    const minROE = sectorMetrics[sector].minROE;
     if (roe <= 0) return 0;
-    if (roe >= 25) return 100;
-    if (roe >= 20) return 80;
-    if (roe >= 15) return 60;
-    if (roe >= 10) return 40;
-    if (roe >= 5) return 20;
+    if (roe >= minROE * 2) return 100;
+    if (roe >= minROE * 1.5) return 80;
+    if (roe >= minROE * 1.25) return 60;
+    if (roe >= minROE * 1.1) return 40;
+    if (roe >= minROE * 1.05) return 20;
     return 0;
 }
 
-function calculateDebtScore(debtToEquity: number): number {
-    if (debtToEquity <= 0.3) return 100;
-    if (debtToEquity <= 0.5) return 80;
-    if (debtToEquity <= 0.8) return 60;
-    if (debtToEquity <= 1.0) return 40;
+function calculateDebtScore(debtToEquity: number, sector: CompanySector): number {
+    const maxDebtToEquity = sectorMetrics[sector].maxDebtToEquity;
+    if (debtToEquity <= 0) return 0;
+    if (debtToEquity <= maxDebtToEquity * 0.5) return 100;
+    if (debtToEquity <= maxDebtToEquity * 0.75) return 80;
+    if (debtToEquity <= maxDebtToEquity) return 60;
     return 0;
 }
