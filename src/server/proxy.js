@@ -15,6 +15,15 @@ app.get('/proxy/:ticker', async (req, res) => {
   }
 });
 
+app.get('/api/acoes', async (req, res) => {
+  try {
+    const response = await axios.get(`https://investidor10.com.br/acoes/?page=1`);
+    res.send(response.data);
+  } catch (error) {
+    res.status(500).send('Erro ao acessar dados');
+  }
+});
+
 app.listen(3001, () => {
   console.log('Servidor proxy rodando na porta 3001');
-}); 
+});
